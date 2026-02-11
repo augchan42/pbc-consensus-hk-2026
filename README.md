@@ -1,36 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Plum Blossom Computer (梅花電腦)
 
-## Getting Started
+A Next.js app that synthesizes 1,000 years of Chinese cosmological mathematics with real-time astronomical data into an interactive reasoning dashboard — with cryptographic anchoring on Ethereum.
 
-First, run the development server:
+Built for EasyA x Consensus Hong Kong 2026.
+
+## What It Does
+
+The Plum Blossom Computer runs a deterministic computation pipeline:
+
+1. **Hexagrams** — Shao Yong's time-based method (時間起卦) using Prior Heaven trigram sequence
+2. **Four Pillars** (四柱) — Year/month/day/hour stem-branch pillars from the lunar calendar
+3. **Macro Cycles** — Shao Yong's 129,600-year cosmological framework (元會運世)
+4. **Astronomy** — Real planetary positions and moon phase via VSOP87 ephemeris
+5. **Operational Scale** — Observation level and scale derivation
+6. **Reasoning Graph** — Two semantic branches (Chinese Cosmology + Astronomical) producing a bias signal: **act**, **observe**, **avoid**, or **neutral**
+
+The output is fully reproducible — same timestamp, same result, every time.
+
+## Cosmic Commitment Registry
+
+The on-chain layer is a minimal smart contract that stores tamper-evident commitments of each computation. No oracle network — the computation is deterministic and client-reproducible.
+
+When you click "Commit Signal On-Chain", the contract stores:
+- `cosmologyHash` — keccak256 of the deterministic cosmology result
+- `reasoningHash` — keccak256 of the reasoning synthesis
+- Readable signal data (bias, confidence, hexagram #, moving line)
+- Timestamps and committer address
+
+Anyone can recompute with the same timestamp, hash the output, and verify it matches the on-chain commitment.
+
+**Contract (Sepolia):** [`0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77`](https://sepolia.etherscan.io/address/0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77#code)
+
+Ancient oracles relied on ritual to prevent revision. This one relies on cryptography.
+
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## On-Chain Deployment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- MetaMask or any EVM wallet
+- Sepolia ETH for gas ([Google Cloud faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia))
 
-## Learn More
+### Deploy the Contract
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# 1. Create .env from template
+cp .env.example .env
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 2. Add your mnemonic (or PRIVATE_KEY)
+#    MNEMONIC="your twelve word seed phrase here"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 3. Compile
+npx hardhat compile
 
-## Deploy on Vercel
+# 4. Deploy to Sepolia
+SEPOLIA_RPC=https://ethereum-sepolia-rpc.publicnode.com npx hardhat run contracts/scripts/deploy.ts --network sepolia
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 5. Verify on Etherscan (optional, needs ETHERSCAN_API_KEY in .env)
+SEPOLIA_RPC=https://ethereum-sepolia-rpc.publicnode.com npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Configure the Frontend
+
+Add the deployed contract address to `.env`:
+
+```
+NEXT_PUBLIC_REGISTRY_ADDRESS=<CONTRACT_ADDRESS>
+```
+
+For Vercel deployment, add `NEXT_PUBLIC_REGISTRY_ADDRESS` as an environment variable in the Vercel dashboard.
+
+### Making a Commitment
+
+1. Open the app and connect your wallet (MetaMask will switch to Sepolia automatically)
+2. Click **"Commit Signal On-Chain"**
+3. Sign the transaction — the contract stores the hashes and signal data
+4. View on [Etherscan](https://sepolia.etherscan.io/address/0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77#readContract) via `getLatestCommitment()`
+
+Anyone with Sepolia ETH can commit. Provenance is tracked by `msg.sender`.
+
+## API
+
+```
+GET /api/oracle
+```
+
+Returns the current Plum Blossom Computer signal:
+
+```json
+{
+  "bias": 2,
+  "biasLabel": "observe",
+  "confidence": 53,
+  "hexagramNumber": 39,
+  "movingLine": 1,
+  "timestamp": 1770823546,
+  "cosmologyHash": "0xab6a...",
+  "reasoningHash": "0x7c54...",
+  "algorithmVersion": "pbc-1.0.0"
+}
+```
+
+## Commands
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run lint         # ESLint
+npx hardhat compile  # Compile Solidity
+```
+
+## Architecture
+
+```
+src/
+  app/
+    api/oracle/          → GET endpoint returning signal + hashes
+    [locale]/plum-blossom/
+      PlumBlossomClient  → Main dashboard
+      components/
+        OraclePanel      → On-chain commitment UI
+        HexagramCorePanel, StemsBranchesPanel, ...
+  lib/
+    plumBlossomComputer/ → Deterministic computation engine
+    oracleHash.ts        → keccak256 hashing for on-chain commitments
+    wallet.ts            → Wallet connection + contract interaction
+contracts/
+  CosmicCommitmentRegistry.sol  → On-chain commitment storage
+  scripts/deploy.ts             → Hardhat deploy script
+```
+
+## Stack
+
+- **Next.js 16** / React 19 / TypeScript
+- **lunar-javascript** — Gregorian-Lunar conversion, stem/branch calculation
+- **astronomy-engine** — Planetary positions, moon phase (VSOP87)
+- **ethers.js** — Wallet connection, contract interaction
+- **Hardhat** — Solidity compilation, deployment, verification
+- **Tailwind CSS v4** — Styling
+- **next-intl** — i18n (en/zh)
