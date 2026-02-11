@@ -8,7 +8,15 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git branch:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "WebFetch(domain:easya-ltd.notion.site)",
+      "WebSearch",
+      "Bash(npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox dotenv)",
+      "Bash(npm run build:*)",
+      "Bash(npm pkg set:*)",
+      "Bash(git -C /home/hosermage/projects/pbc-consensus-hk-2026 commit -m \"$\\(cat <<''EOF''\nfeat: integrate OraclePanel into dashboard, add hardhat + ethers deps\n\nWire OraclePanel into PlumBlossomClient grid. Add hardhat, ethers,\nand toolbox as dev/prod dependencies. Exclude contracts/ from Next.js\nTypeScript compilation.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /home/hosermage/projects/pbc-consensus-hk-2026 log --oneline -6)",
+      "Bash(git -C /home/hosermage/projects/pbc-consensus-hk-2026 status)"
     ]
   }
 }
