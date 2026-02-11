@@ -7,6 +7,15 @@ dotenv.config();
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
   networks: {
+    sepolia: {
+      url: process.env.SEPOLIA_RPC || "https://rpc.sepolia.org",
+      chainId: 11155111,
+      accounts: process.env.PRIVATE_KEY
+        ? [process.env.PRIVATE_KEY]
+        : process.env.MNEMONIC
+          ? { mnemonic: process.env.MNEMONIC }
+          : [],
+    },
     baseSepolia: {
       url: process.env.BASE_SEPOLIA_RPC || "https://sepolia.base.org",
       chainId: 84532,
