@@ -11,6 +11,7 @@ import MacroCyclePanel from "./components/MacroCyclePanel";
 import PlanetaryPanel from "./components/PlanetaryPanel";
 import OperationalScalePanel from "./components/OperationalScalePanel";
 import ReasoningTreePanel from "./components/ReasoningTreePanel";
+import OraclePanel from "./components/OraclePanel";
 
 interface PlumBlossomClientProps {
   initialResult: PlumBlossomComputerResult;
@@ -62,6 +63,7 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
             moonPhase={result.cosmology.moonPhase}
           />
           <OperationalScalePanel scale={result.cosmology.operationalScale} />
+          <OraclePanel result={result} />
         </div>
 
         {/* Reasoning Tree — full width */}
