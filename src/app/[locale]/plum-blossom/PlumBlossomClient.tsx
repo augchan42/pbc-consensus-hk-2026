@@ -56,8 +56,8 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
         {/* Data Panels Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
           <HexagramCorePanel cosmology={result.cosmology} />
-          <StemsBranchesPanel fourPillars={result.cosmology.fourPillars} />
           <MacroCyclePanel macroCycle={result.cosmology.macroCycle} />
+          <StemsBranchesPanel fourPillars={result.cosmology.fourPillars} />
           <PlanetaryPanel
             positions={result.cosmology.planetaryPositions}
             moonPhase={result.cosmology.moonPhase}
