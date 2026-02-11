@@ -46,6 +46,7 @@ export const CHAIN_CONFIG = CHAINS[networkKey] || CHAINS.sepolia;
 export const REGISTRY_ABI = [
   "function commit(bytes32 cosmologyHash, bytes32 reasoningHash, uint8 bias, uint8 confidence, uint8 hexagramNumber, uint8 movingLine, uint256 computationTimestamp) external returns (uint256 id)",
   "function getLatestCommitment() external view returns (uint256 id, bytes32 cosmologyHash, bytes32 reasoningHash, uint8 bias, uint8 confidence, uint8 hexagramNumber, uint8 movingLine, uint256 computationTimestamp, uint256 commitTimestamp, address committer)",
+  "function commitments(uint256) external view returns (bytes32 cosmologyHash, bytes32 reasoningHash, uint8 bias, uint8 confidence, uint8 hexagramNumber, uint8 movingLine, uint256 computationTimestamp, uint256 commitTimestamp, address committer)",
   "function commitmentCount() external view returns (uint256)",
   "function verify(uint256 id, bytes32 expectedCosmologyHash, bytes32 expectedReasoningHash) external view returns (bool)",
   "event CommitmentMade(uint256 indexed id, address indexed committer, bytes32 cosmologyHash, bytes32 reasoningHash, uint8 bias, uint8 confidence, uint8 hexagramNumber, uint256 computationTimestamp)",

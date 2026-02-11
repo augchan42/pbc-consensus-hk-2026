@@ -37,6 +37,7 @@ const explorer = CHAIN_CONFIG.blockExplorerUrls[0];
 export default function OraclePanel({ result }: Props) {
   const [address, setAddress] = useState<string | null>(null);
   const [onChain, setOnChain] = useState<OnChainState | null>(null);
+  const [history, setHistory] = useState<OnChainState[]>([]);
   const [totalCommitments, setTotalCommitments] = useState<number>(0);
   const [txStatus, setTxStatus] = useState<TxStatus>("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -53,8 +54,9 @@ export default function OraclePanel({ result }: Props) {
       const provider = new BrowserProvider(eth as any);
       const contract = getRegistryContract(provider);
       const count = await contract.commitmentCount();
-      setTotalCommitments(Number(count));
-      if (Number(count) > 0) {
+      const total = Number(count);
+      setTotalCommitments(total);
+      if (total > 0) {
         const c = await contract.getLatestCommitment();
         setOnChain({
           id: Number(c[0]),
@@ -68,6 +70,26 @@ export default function OraclePanel({ result }: Props) {
           commitTimestamp: Number(c[8]),
           committer: c[9],
         });
+
+        // Fetch history (newest first, cap at 20)
+        const cap = Math.min(total, 20);
+        const entries: OnChainState[] = [];
+        for (let i = total - 1; i >= total - cap; i--) {
+          const h = await contract.commitments(i);
+          entries.push({
+            id: i,
+            cosmologyHash: h[0],
+            reasoningHash: h[1],
+            bias: Number(h[2]),
+            confidence: Number(h[3]),
+            hexagramNumber: Number(h[4]),
+            movingLine: Number(h[5]),
+            computationTimestamp: Number(h[6]),
+            commitTimestamp: Number(h[7]),
+            committer: h[8],
+          });
+        }
+        setHistory(entries);
       }
     } catch {
       // No wallet or contract not deployed — silent
@@ -254,6 +276,51 @@ export default function OraclePanel({ result }: Props) {
             </a>
           )}
         </div>
+
+        {/* Commitment History */}
+        {history.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-[#2a2a2a]">
+            <div className="text-xs text-gray-600 uppercase mb-2">Commitment History</div>
+            <div className="max-h-48 overflow-y-auto scrollbar-thin">
+              <table className="w-full text-xs text-gray-500">
+                <thead>
+                  <tr className="text-gray-600 border-b border-[#2a2a2a]">
+                    <th className="text-left py-1 pr-2">#</th>
+                    <th className="text-left py-1 pr-2">Bias</th>
+                    <th className="text-left py-1 pr-2">Conf</th>
+                    <th className="text-left py-1 pr-2">Hex</th>
+                    <th className="text-left py-1 pr-2">Committer</th>
+                    <th className="text-left py-1">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((entry) => {
+                    const label = uint8ToBiasLabel(entry.bias);
+                    return (
+                      <tr key={entry.id} className="border-b border-[#1e1e1e] hover:bg-[#1a1a1a]">
+                        <td className="py-1 pr-2 text-gray-600">{entry.id}</td>
+                        <td className={`py-1 pr-2 font-bold ${BIAS_COLORS[label]}`}>{label}</td>
+                        <td className="py-1 pr-2">{entry.confidence}%</td>
+                        <td className="py-1 pr-2">#{entry.hexagramNumber} / L{entry.movingLine}</td>
+                        <td className="py-1 pr-2">
+                          <a
+                            href={`${explorer}/address/${entry.committer}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-gray-300"
+                          >
+                            {entry.committer.slice(0, 6)}...{entry.committer.slice(-4)}
+                          </a>
+                        </td>
+                        <td className="py-1">{new Date(entry.commitTimestamp * 1000).toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
