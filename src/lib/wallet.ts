@@ -51,24 +51,37 @@ export const REGISTRY_ABI = [
   "event CommitmentMade(uint256 indexed id, address indexed committer, bytes32 cosmologyHash, bytes32 reasoningHash, uint8 bias, uint8 confidence, uint8 hexagramNumber, uint256 computationTimestamp)",
 ];
 
-export async function connectWallet() {
+export function getEthProvider() {
   if (!window.ethereum) throw new Error("No wallet detected");
+  // If multiple wallet extensions exist, prefer MetaMask
+  if (window.ethereum.providers?.length) {
+    const metamask = window.ethereum.providers.find((p) => p.isMetaMask);
+    if (metamask) return metamask;
+  }
+  return window.ethereum;
+}
+
+export async function connectWallet() {
+  const eth = getEthProvider();
+  await eth.request({ method: "eth_requestAccounts" });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const provider = new BrowserProvider(window.ethereum as any);
+  const provider = new BrowserProvider(eth as any);
   const signer = await provider.getSigner();
   return { provider, signer };
 }
 
 export async function switchChain() {
-  if (!window.ethereum) throw new Error("No wallet detected");
+  const eth = getEthProvider();
   try {
-    await window.ethereum.request({
+    await eth.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: CHAIN_CONFIG.chainId }],
     });
   } catch (err: unknown) {
-    if ((err as { code?: number })?.code === 4902) {
-      await window.ethereum.request({
+    const code = (err as { code?: number })?.code;
+    // 4902 = chain not added, -32603 = internal error (MetaMask can't find chain)
+    if (code === 4902 || code === -32603) {
+      await eth.request({
         method: "wallet_addEthereumChain",
         params: [CHAIN_CONFIG],
       });

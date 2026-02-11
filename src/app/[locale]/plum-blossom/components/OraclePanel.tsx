@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PlumBlossomComputerResult } from "@/lib/plumBlossomComputer/core/types";
 import { hashCosmology, hashReasoning, biasToUint8, uint8ToBiasLabel } from "@/lib/oracleHash";
-import { connectWallet, switchChain, getRegistryContract, CHAIN_CONFIG } from "@/lib/wallet";
+import { connectWallet, switchChain, getRegistryContract, getEthProvider, CHAIN_CONFIG } from "@/lib/wallet";
 import PanelHelp from "./PanelHelp";
 
 interface Props {
@@ -48,8 +48,9 @@ export default function OraclePanel({ result }: Props) {
     if (!registryAddress || !window.ethereum) return;
     try {
       const { BrowserProvider } = await import("ethers");
+      const eth = getEthProvider();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const provider = new BrowserProvider(window.ethereum as any);
+      const provider = new BrowserProvider(eth as any);
       const contract = getRegistryContract(provider);
       const count = await contract.commitmentCount();
       setTotalCommitments(Number(count));
@@ -81,11 +82,12 @@ export default function OraclePanel({ result }: Props) {
     setError(null);
     setTxStatus("connecting");
     try {
-      await switchChain();
-      setTxStatus("switching");
+      // Request accounts first, then switch chain
       const { signer } = await connectWallet();
       const addr = await signer.getAddress();
       setAddress(addr);
+      setTxStatus("switching");
+      await switchChain();
       setTxStatus("idle");
       await readOnChainState();
     } catch (err: unknown) {
