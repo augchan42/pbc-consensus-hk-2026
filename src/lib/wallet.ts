@@ -1,14 +1,47 @@
 import { BrowserProvider, Contract, type ContractRunner } from "ethers";
 
-const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
+interface ChainInfo {
+  chainId: string;
+  chainName: string;
+  nativeCurrency: { name: string; symbol: string; decimals: number };
+  rpcUrls: string[];
+  blockExplorerUrls: string[];
+}
 
-export const CHAIN_CONFIG = {
-  chainId: SEPOLIA_CHAIN_ID,
-  chainName: "Sepolia",
-  nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-  rpcUrls: ["https://rpc.sepolia.org"],
-  blockExplorerUrls: ["https://sepolia.etherscan.io"],
+const CHAINS: Record<string, ChainInfo> = {
+  sepolia: {
+    chainId: "0xaa36a7", // 11155111
+    chainName: "Sepolia",
+    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://rpc.sepolia.org"],
+    blockExplorerUrls: ["https://sepolia.etherscan.io"],
+  },
+  baseSepolia: {
+    chainId: "0x14a34", // 84532
+    chainName: "Base Sepolia",
+    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://sepolia.base.org"],
+    blockExplorerUrls: ["https://sepolia.basescan.org"],
+  },
+  mainnet: {
+    chainId: "0x1", // 1
+    chainName: "Ethereum",
+    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://eth.llamarpc.com"],
+    blockExplorerUrls: ["https://etherscan.io"],
+  },
+  base: {
+    chainId: "0x2105", // 8453
+    chainName: "Base",
+    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://mainnet.base.org"],
+    blockExplorerUrls: ["https://basescan.org"],
+  },
 };
+
+const networkKey = process.env.NEXT_PUBLIC_CHAIN || "sepolia";
+
+export const CHAIN_CONFIG = CHAINS[networkKey] || CHAINS.sepolia;
 
 export const REGISTRY_ABI = [
   "function commit(bytes32 cosmologyHash, bytes32 reasoningHash, uint8 bias, uint8 confidence, uint8 hexagramNumber, uint8 movingLine, uint256 computationTimestamp) external returns (uint256 id)",
@@ -26,12 +59,12 @@ export async function connectWallet() {
   return { provider, signer };
 }
 
-export async function switchToSepolia() {
+export async function switchChain() {
   if (!window.ethereum) throw new Error("No wallet detected");
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: SEPOLIA_CHAIN_ID }],
+      params: [{ chainId: CHAIN_CONFIG.chainId }],
     });
   } catch (err: unknown) {
     if ((err as { code?: number })?.code === 4902) {

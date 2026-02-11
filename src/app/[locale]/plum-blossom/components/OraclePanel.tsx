@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PlumBlossomComputerResult } from "@/lib/plumBlossomComputer/core/types";
 import { hashCosmology, hashReasoning, biasToUint8, uint8ToBiasLabel } from "@/lib/oracleHash";
-import { connectWallet, switchToSepolia, getRegistryContract } from "@/lib/wallet";
+import { connectWallet, switchChain, getRegistryContract, CHAIN_CONFIG } from "@/lib/wallet";
 import PanelHelp from "./PanelHelp";
 
 interface Props {
@@ -31,6 +31,8 @@ const BIAS_COLORS: Record<string, string> = {
   AVOID: "text-red-400",
   NEUTRAL: "text-gray-400",
 };
+
+const explorer = CHAIN_CONFIG.blockExplorerUrls[0];
 
 export default function OraclePanel({ result }: Props) {
   const [address, setAddress] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export default function OraclePanel({ result }: Props) {
     setError(null);
     setTxStatus("connecting");
     try {
-      await switchToSepolia();
+      await switchChain();
       setTxStatus("switching");
       const { signer } = await connectWallet();
       const addr = await signer.getAddress();
@@ -139,7 +141,7 @@ export default function OraclePanel({ result }: Props) {
           <span className="text-xl font-mono uppercase tracking-wider text-gray-500">
             Cosmic Commitment Registry
           </span>
-          <span className="text-[10px] font-mono text-gray-600 uppercase">Sepolia</span>
+          <span className="text-[10px] font-mono text-gray-600 uppercase">{CHAIN_CONFIG.chainName}</span>
         </div>
         <PanelHelp text="Cryptographic anchoring for the Plum Blossom Computer. Commits a tamper-evident hash of the deterministic cosmology computation and reasoning synthesis to the blockchain. Anyone can recompute with the same timestamp and verify the hashes match. Ancient oracles relied on ritual to prevent revision — this one relies on cryptography." />
       </div>
@@ -225,7 +227,7 @@ export default function OraclePanel({ result }: Props) {
           )}
           {txHash && (
             <a
-              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              href={`${explorer}/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-gray-500 hover:text-gray-300 underline"
@@ -235,10 +237,13 @@ export default function OraclePanel({ result }: Props) {
           )}
           {error && <span className="text-xs text-red-400">{error}</span>}
 
-          {/* Contract link */}
+          {/* Gas note + contract link */}
+          <span className="text-xs text-gray-600">
+            Requires {CHAIN_CONFIG.nativeCurrency.symbol} on {CHAIN_CONFIG.chainName} for gas
+          </span>
           {registryAddress && (
             <a
-              href={`https://sepolia.etherscan.io/address/${registryAddress}`}
+              href={`${explorer}/address/${registryAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-gray-600 hover:text-gray-400 ml-auto"
