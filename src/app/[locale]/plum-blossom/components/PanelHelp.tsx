@@ -24,9 +24,11 @@ export default function PanelHelp({ text }: PanelHelpProps) {
       <PopoverContent
         side="bottom"
         align="end"
-        className="max-w-sm bg-[#1a1a1a] border-amber-800 p-3"
+        className="max-w-lg bg-[#1a1a1a] border-amber-800 p-4"
       >
-        <p className="text-sm text-amber-500/80 font-mono leading-relaxed">{text}</p>
+        <div className="max-h-80 overflow-y-auto text-sm text-amber-500/80 font-mono leading-relaxed whitespace-pre-line">
+          {text}
+        </div>
       </PopoverContent>
     </Popover>
   );

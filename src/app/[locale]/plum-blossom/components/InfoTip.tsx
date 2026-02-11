@@ -22,9 +22,9 @@ export default function InfoTip({ content, children }: InfoTipProps) {
       </TooltipTrigger>
       <TooltipContent
         side="top"
-        className="max-w-xs bg-[#1a1a1a] border-amber-800/50 px-3 py-2"
+        className="max-w-md bg-[#1a1a1a] border-amber-800/50 px-3 py-2"
       >
-        <div className="text-xs font-mono text-gray-300 leading-relaxed">
+        <div className="text-xs font-mono text-gray-300 leading-relaxed max-h-60 overflow-y-auto">
           {content}
         </div>
       </TooltipContent>

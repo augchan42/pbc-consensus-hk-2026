@@ -5,6 +5,33 @@ import { OPERATIONAL_SCALES, OBSERVATION_LEVELS, ELEMENT_THINGS, SOCIAL_ROLES } 
 import PanelHelp from "./PanelHelp";
 import InfoTip from "./InfoTip";
 
+const PANEL_HELP_TEXT =
+  "Inspired by Shao Yong's 觀物 (Guanwu, \"Observing Things\") philosophy. "
+  + "Shao Yong distinguished two modes of observation: "
+  + "以物觀物 (observing things through things) — objective, letting patterns speak for themselves; "
+  + "and 以我觀物 (observing things through self) — subjective, colored by personal feeling.\n\n"
+  + "Observation Level maps this to three stances:\n"
+  + "目 (Eye) — Direct sensory observation. See what is plainly there.\n"
+  + "心 (Heart) — Intuitive understanding. Feel the relational quality.\n"
+  + "理 (Principle) — Structural pattern recognition. Perceive the cosmic logic.\n\n"
+  + "Scale (十/百/千/萬/億) suggests the scope of phenomena most relevant to this moment — "
+  + "from the personal (十, tens) to the civilizational (億, hundred millions). "
+  + "This echoes Shao Yong's insight that the same principles operate at every scale, "
+  + "but at any given moment, certain scales are more salient.\n\n"
+  + "Derivation: The observation level is derived from the hexagram's moving line position "
+  + "(inner lines suggest 心/Heart; extreme lines with retrogrades suggest 理/Principle) "
+  + "and the scale from the count of forward-moving planets in active zodiac signs. "
+  + "This is a creative heuristic inspired by Shao Yong's framework, not a formula found in his texts.";
+
+const OBSERVATION_GUIDANCE: Record<string, string> = {
+  "Eye": "目 (Mù) — Observe directly. Trust what you can see, measure, and verify. "
+    + "Shao Yong's 以物觀物: let things reveal themselves without projection.",
+  "Heart": "心 (Xīn) — Feel the relational quality. Attend to intuition, emotional resonance, "
+    + "and interpersonal dynamics. The moving line is in the inner position — look inward.",
+  "Principle": "理 (Lǐ) — Perceive structural patterns. The hexagram's moving line is at an extreme "
+    + "and multiple planets are retrograde — conditions point toward deep, systemic forces at work.",
+};
+
 interface Props {
   scale: OperationalScaleResult;
 }
@@ -27,7 +54,7 @@ export default function OperationalScalePanel({ scale }: Props) {
           </span>
           <span className="text-[10px] font-mono text-gray-600 uppercase">Derived</span>
         </div>
-        <PanelHelp text="Maps the current moment to Shao Yong's observational scale hierarchy. Scale (體, tǐ) indicates the scope of phenomena best observed at this time — from personal (身) to civilizational (世). Observation level suggests the appropriate analytical stance. Derived from the interaction of the Four Pillars' dominant elements and the macro cycle position." />
+        <PanelHelp text={PANEL_HELP_TEXT} />
       </div>
       <div className="p-4 font-mono text-xl text-gray-200">
         {/* Scale gauge */}
@@ -75,7 +102,7 @@ export default function OperationalScalePanel({ scale }: Props) {
         <div className="border-t border-[#2a2a2a] pt-4">
           <div className="text-xl text-gray-500 uppercase mb-2">Observation</div>
           <div className="flex items-center gap-3">
-            <InfoTip content={obsInfo?.description || scale.observationLevel}>
+            <InfoTip content={OBSERVATION_GUIDANCE[scale.observationEnglish] || obsInfo?.description || scale.observationLevel}>
               <span className="text-3xl text-[#44ff88]">{scale.observationLevel}</span>
             </InfoTip>
             <span className="text-xl text-gray-400">{scale.observationEnglish}</span>

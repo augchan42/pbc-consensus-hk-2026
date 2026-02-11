@@ -11,6 +11,15 @@
  */
 
 export interface MacroCycleContext {
+  yuan: {
+    startYear: number;
+    endYear: number;
+    totalYears: number;
+    currentYear: number;
+    elapsed: number; // years elapsed since yuan start
+    /** LLM reasoning context: what this layer means for interpretation */
+    context: string;
+  };
   hui: {
     name: string;
     chinese: string; // Traditional
@@ -25,6 +34,8 @@ export interface MacroCycleContext {
     hexagramUnicode: string;
     startYear: number;
     endYear: number;
+    /** LLM reasoning context: what this layer means for interpretation */
+    context: string;
   };
   yun: {
     hexagramNumber: number;
@@ -36,6 +47,8 @@ export interface MacroCycleContext {
     startYear: number;
     endYear: number;
     yunNumber: number; // 1-360 within Yuan
+    /** LLM reasoning context: what this layer means for interpretation */
+    context: string;
   };
   shi: {
     hexagramNumber: number;
@@ -47,6 +60,8 @@ export interface MacroCycleContext {
     startYear: number;
     endYear: number;
     shiNumber: number; // 1-4320 within Yuan
+    /** LLM reasoning context: what this layer means for interpretation */
+    context: string;
   };
 }
 
@@ -426,7 +441,21 @@ export function getMacroCycleContext(year: number): MacroCycleContext {
   const yun = calculateYun(year, hui);
   const shi = calculateShi(year);
 
+  const yuanEndYear = YUAN_START_YEAR + YUAN_YEARS - 1;
+  const elapsed = year - YUAN_START_YEAR;
+  const progress = ((elapsed / YUAN_YEARS) * 100).toFixed(1);
+
   return {
+    yuan: {
+      startYear: YUAN_START_YEAR,
+      endYear: yuanEndYear,
+      totalYears: YUAN_YEARS,
+      currentYear: year,
+      elapsed,
+      context: `We are ${progress}% through the current Yuan (元), ${elapsed.toLocaleString()} years into a ${YUAN_YEARS.toLocaleString()}-year cycle. `
+        + `The Yuan is the outermost temporal container — it sets the absolute cosmological frame but is too vast to directly influence momentary conditions. `
+        + `Think of it as the ocean in which all smaller cycles swim.`,
+    },
     hui: {
       name: hui.branch,
       chinese: `${hui.branchChinese}會`,
@@ -441,9 +470,24 @@ export function getMacroCycleContext(year: number): MacroCycleContext {
       hexagramUnicode: hui.hexagramUnicode,
       startYear: hui.startYear,
       endYear: hui.endYear,
+      context: `The ${hui.branchChinese} (${hui.branch}) Hui is governed by hexagram #${hui.hexagramNumber} ${hui.hexagramChinese}. `
+        + `Season: ${hui.season}, inspected by ${hui.inspector} (${hui.inspectorChinese} ${hui.inspectorUnicode}). `
+        + `This 10,800-year epoch sets the macro-tone: the quality of the "current" in which civilizations rise and fall. `
+        + `Like climate vs weather — the Hui determines the deep background condition.`,
     },
-    yun,
-    shi,
+    yun: {
+      ...yun,
+      context: `Yun #${yun.yunNumber}: hexagram ${yun.chinese} ${yun.english} (${yun.startYear}–${yun.endYear}). `
+        + `This 360-year revolution is the civilizational tendency — the tide within which empires, philosophies, and technologies emerge. `
+        + `It is derived from the Qi-Term hexagram of the governing Principal hexagram.`,
+    },
+    shi: {
+      ...shi,
+      context: `Shi #${shi.shiNumber}: hexagram ${shi.chinese} ${shi.english} (${shi.startYear}–${shi.endYear}). `
+        + `This 30-year generation is the most experientially relevant macro layer — the wave you actually ride. `
+        + `It cycles through the 60 on-duty hexagrams in Fu Xi circular sequence. `
+        + `Of all macro layers, the Shi has the most direct bearing on the quality of lived experience.`,
+    },
   };
 }
 
@@ -452,7 +496,22 @@ export function getMacroCycleContext(year: number): MacroCycleContext {
  */
 function getDefaultMacroCycleContext(): MacroCycleContext {
   const hui = HUI_DATA[6]; // Wu (午) - current era
+  const yuanEndYear = YUAN_START_YEAR + YUAN_YEARS - 1;
+  const year = new Date().getFullYear();
+  const elapsed = year - YUAN_START_YEAR;
+  const progress = ((elapsed / YUAN_YEARS) * 100).toFixed(1);
+
   return {
+    yuan: {
+      startYear: YUAN_START_YEAR,
+      endYear: yuanEndYear,
+      totalYears: YUAN_YEARS,
+      currentYear: year,
+      elapsed,
+      context: `We are ${progress}% through the current Yuan (元), ${elapsed.toLocaleString()} years into a ${YUAN_YEARS.toLocaleString()}-year cycle. `
+        + `The Yuan is the outermost temporal container — it sets the absolute cosmological frame but is too vast to directly influence momentary conditions. `
+        + `Think of it as the ocean in which all smaller cycles swim.`,
+    },
     hui: {
       name: 'Wu',
       chinese: '午會',
@@ -467,6 +526,10 @@ function getDefaultMacroCycleContext(): MacroCycleContext {
       hexagramUnicode: '䷫',
       startYear: hui.startYear,
       endYear: hui.endYear,
+      context: `The 午 (Wu) Hui is governed by hexagram #44 姤 (Coming to Meet). `
+        + `Season: Summer, inspected by Kan (坎 ☵). `
+        + `This 10,800-year epoch sets the macro-tone: the quality of the "current" in which civilizations rise and fall. `
+        + `Like climate vs weather — the Hui determines the deep background condition.`,
     },
     yun: {
       hexagramNumber: 60,
@@ -478,6 +541,9 @@ function getDefaultMacroCycleContext(): MacroCycleContext {
       startYear: -2217,
       endYear: 3183,
       yunNumber: 181,
+      context: `Yun #181: hexagram 節 Limitation (-2217–3183). `
+        + `This 360-year revolution is the civilizational tendency — the tide within which empires, philosophies, and technologies emerge. `
+        + `It is derived from the Qi-Term hexagram of the governing Principal hexagram.`,
     },
     shi: {
       hexagramNumber: 28,
@@ -489,6 +555,10 @@ function getDefaultMacroCycleContext(): MacroCycleContext {
       startYear: -57,
       endYear: 2103,
       shiNumber: 2233,
+      context: `Shi #2233: hexagram 大過 Preponderance of the Great (-57–2103). `
+        + `This 30-year generation is the most experientially relevant macro layer — the wave you actually ride. `
+        + `It cycles through the 60 on-duty hexagrams in Fu Xi circular sequence. `
+        + `Of all macro layers, the Shi has the most direct bearing on the quality of lived experience.`,
     },
   };
 }
