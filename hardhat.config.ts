@@ -6,6 +6,9 @@ dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
+  },
   networks: {
     sepolia: {
       url: process.env.SEPOLIA_RPC || "https://rpc.sepolia.org",
