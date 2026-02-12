@@ -96,6 +96,7 @@ export default function VerifyView({ result }: Props) {
     recomputedCosmCanonical: string;
     recomputedReasCanonical: string;
     matchedToggles?: Record<string, AgreementState>;
+    matchedMs?: number;
   } | null>(null);
 
   const registryAddress = process.env.NEXT_PUBLIC_REGISTRY_ADDRESS;
@@ -155,18 +156,17 @@ export default function VerifyView({ result }: Props) {
   const cosmPretty = JSON.stringify(JSON.parse(cosmCanonical), null, 2);
   const reasPretty = JSON.stringify(JSON.parse(reasCanonical), null, 2);
 
-  // Verify against an on-chain entry by recomputing from its timestamp.
-  // If the default (no-toggle) reasoning hash doesn't match, brute-force
-  // all 9 toggle combinations (2 branches x 3 states) to find the match.
-  const handleVerify = useCallback(async (entry: OnChainEntry) => {
-    setSelectedEntry(entry);
-    setVerifyStatus("verifying");
-    setVerifyResult(null);
-
-    const recomputed = computePlumBlossom({ date: new Date(entry.computationTimestamp * 1000) });
-    const reCosmCanonical = canonicalCosmology(recomputed.cosmology);
+  // Try a single recomputation at a given Date against the on-chain entry.
+  // Returns a match result or null if neither cosm nor reas match.
+  const tryVerifyAt = useCallback((date: Date, entry: OnChainEntry) => {
+    const recomputed = computePlumBlossom({ date });
     const reCosmHash = hashCosmology(recomputed.cosmology);
     const cosmMatch = reCosmHash === entry.cosmologyHash;
+
+    // If cosmology doesn't match, this timestamp is wrong — skip toggles
+    if (!cosmMatch) return null;
+
+    const reCosmCanonical = canonicalCosmology(recomputed.cosmology);
 
     // Try default (no toggles) first
     let reReasCanonical = canonicalReasoning(recomputed.reasoning);
@@ -174,20 +174,18 @@ export default function VerifyView({ result }: Props) {
     let reasMatch = reReasHash === entry.reasoningHash;
     let matchedToggles: Record<string, AgreementState> | undefined;
 
-    // If reasoning doesn't match, cycle through all toggle combinations
+    // If reasoning doesn't match, cycle through all 9 toggle combinations
     if (!reasMatch) {
       const states: AgreementState[] = ["neutral", "accepted", "rejected"];
       const branchIds = recomputed.reasoning.branches.map(b => b.id);
 
       for (const s0 of states) {
         for (const s1 of states) {
+          if (s0 === "neutral" && s1 === "neutral") continue;
           const toggles: Record<string, AgreementState> = {
             [branchIds[0]]: s0,
             [branchIds[1]]: s1,
           };
-          // Skip all-neutral (already tried above)
-          if (s0 === "neutral" && s1 === "neutral") continue;
-
           const toggled = recomputeWithToggles(recomputed.cosmology, toggles);
           const hash = hashReasoning(toggled);
           if (hash === entry.reasoningHash) {
@@ -202,7 +200,7 @@ export default function VerifyView({ result }: Props) {
       }
     }
 
-    setVerifyResult({
+    return {
       cosmMatch,
       reasMatch,
       recomputedCosmHash: reCosmHash,
@@ -210,9 +208,49 @@ export default function VerifyView({ result }: Props) {
       recomputedCosmCanonical: reCosmCanonical,
       recomputedReasCanonical: reReasCanonical,
       matchedToggles,
-    });
-    setVerifyStatus(cosmMatch && reasMatch ? "match" : "mismatch");
+      matchedMs: date.getTime() % 1000,
+    };
   }, []);
+
+  // Verify against an on-chain entry by recomputing from its timestamp.
+  // The on-chain timestamp is in seconds, but the original computation may
+  // have used a Date with millisecond precision. We try ms=0 first, then
+  // brute-force all 1000 millisecond offsets if needed.
+  const handleVerify = useCallback(async (entry: OnChainEntry) => {
+    setSelectedEntry(entry);
+    setVerifyStatus("verifying");
+    setVerifyResult(null);
+
+    const baseMs = entry.computationTimestamp * 1000;
+
+    // Try ms=0 first (the truncated second)
+    let match = tryVerifyAt(new Date(baseMs), entry);
+
+    // If cosmology didn't match, brute-force millisecond offsets
+    if (!match) {
+      for (let ms = 1; ms < 1000; ms++) {
+        match = tryVerifyAt(new Date(baseMs + ms), entry);
+        if (match) break;
+      }
+    }
+
+    if (match) {
+      setVerifyResult(match);
+      setVerifyStatus(match.cosmMatch && match.reasMatch ? "match" : "mismatch");
+    } else {
+      // No millisecond offset produced a cosmology match
+      const fallback = computePlumBlossom({ date: new Date(baseMs) });
+      setVerifyResult({
+        cosmMatch: false,
+        reasMatch: false,
+        recomputedCosmHash: hashCosmology(fallback.cosmology),
+        recomputedReasHash: hashReasoning(fallback.reasoning),
+        recomputedCosmCanonical: canonicalCosmology(fallback.cosmology),
+        recomputedReasCanonical: canonicalReasoning(fallback.reasoning),
+      });
+      setVerifyStatus("mismatch");
+    }
+  }, [tryVerifyAt]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 font-mono">
@@ -283,7 +321,7 @@ export default function VerifyView({ result }: Props) {
                           {entry.committer.slice(0, 6)}...{entry.committer.slice(-4)}
                         </a>
                       </td>
-                      <td className="py-2 px-3">{new Date(entry.commitTimestamp * 1000).toLocaleString()}</td>
+                      <td className="py-2 px-3">{new Date(entry.computationTimestamp * 1000).toLocaleString()}</td>
                       <td className="py-2 px-3 text-gray-600">
                         {isSelected && verifyStatus === "verifying" && "..."}
                         {isSelected && verifyStatus === "match" && <span className="text-[#44ff88]">Verified</span>}
@@ -314,7 +352,14 @@ export default function VerifyView({ result }: Props) {
               <div className="space-y-2 text-xl">
                 <div>
                   <span className="text-gray-600">Recomputed from: </span>
-                  <span className="text-gray-400">{new Date(selectedEntry.computationTimestamp * 1000).toISOString()}</span>
+                  <span className="text-gray-400">
+                    {new Date(selectedEntry.computationTimestamp * 1000 + (verifyResult.matchedMs ?? 0)).toISOString()}
+                  </span>
+                  {verifyResult.matchedMs !== undefined && verifyResult.matchedMs > 0 && (
+                    <span className="text-amber-400 ml-2">
+                      (+{verifyResult.matchedMs}ms offset recovered)
+                    </span>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>

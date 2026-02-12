@@ -69,7 +69,9 @@ function calculateFourPillars(date: Date): FourPillars {
  * Main computation function - runs all layers client-side
  */
 export function computePlumBlossom(input: { date: Date }): PlumBlossomComputerResult {
-  const { date } = input;
+  // Truncate to whole seconds so the computation is reproducible from
+  // the on-chain Unix timestamp (which stores seconds, not milliseconds).
+  const date = new Date(Math.floor(input.date.getTime() / 1000) * 1000);
 
   // Layer 1: Hexagrams (existing)
   const timeBased = calculatePlumBlossom({ gregorianDate: date });

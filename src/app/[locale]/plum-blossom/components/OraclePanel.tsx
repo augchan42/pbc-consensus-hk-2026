@@ -207,7 +207,7 @@ export default function OraclePanel({ result }: Props) {
                 <div className="text-gray-500 text-xs space-y-0.5">
                   <div>Hexagram #{onChain.hexagramNumber} / Line {onChain.movingLine}</div>
                   <div>Commitment #{onChain.id} / {totalCommitments} total</div>
-                  <div>{new Date(onChain.commitTimestamp * 1000).toLocaleString()}</div>
+                  <div>{new Date(onChain.computationTimestamp * 1000).toLocaleString()}</div>
                 </div>
               </>
             ) : (
@@ -312,7 +312,7 @@ export default function OraclePanel({ result }: Props) {
                             {entry.committer.slice(0, 6)}...{entry.committer.slice(-4)}
                           </a>
                         </td>
-                        <td className="py-1">{new Date(entry.commitTimestamp * 1000).toLocaleString()}</td>
+                        <td className="py-1">{new Date(entry.computationTimestamp * 1000).toLocaleString()}</td>
                       </tr>
                     );
                   })}
