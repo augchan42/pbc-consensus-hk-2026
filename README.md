@@ -10,6 +10,8 @@ Built for EasyA x Consensus Hong Kong 2026.
 
 **Submission post:** https://x.com/aug_digitalrain/status/2021638340521660540
 
+**Pitch deck:** https://www.canva.com/design/DAHBCf72Ckc/YsiyO7eaTLVZFUoNHmyyrg/edit
+
 ## Screenshots
 
 ![Hexagrams, Four Pillars, and Macro Cycle panels](public/screenshots/pbc1.png)
