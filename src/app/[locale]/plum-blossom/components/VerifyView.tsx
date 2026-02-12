@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import type { PlumBlossomComputerResult } from "@/lib/plumBlossomComputer/core/types";
+import type { PlumBlossomComputerResult, AgreementState } from "@/lib/plumBlossomComputer/core/types";
 import { computePlumBlossom } from "@/lib/plumBlossomComputer";
+import { recomputeWithToggles } from "@/lib/plumBlossomComputer/reasoning/graphBuilder";
 import {
   canonicalCosmology,
   canonicalReasoning,
@@ -94,6 +95,7 @@ export default function VerifyView({ result }: Props) {
     recomputedReasHash: string;
     recomputedCosmCanonical: string;
     recomputedReasCanonical: string;
+    matchedToggles?: Record<string, AgreementState>;
   } | null>(null);
 
   const registryAddress = process.env.NEXT_PUBLIC_REGISTRY_ADDRESS;
@@ -153,21 +155,52 @@ export default function VerifyView({ result }: Props) {
   const cosmPretty = JSON.stringify(JSON.parse(cosmCanonical), null, 2);
   const reasPretty = JSON.stringify(JSON.parse(reasCanonical), null, 2);
 
-  // Verify against an on-chain entry by recomputing from its timestamp
+  // Verify against an on-chain entry by recomputing from its timestamp.
+  // If the default (no-toggle) reasoning hash doesn't match, brute-force
+  // all 9 toggle combinations (2 branches x 3 states) to find the match.
   const handleVerify = useCallback(async (entry: OnChainEntry) => {
     setSelectedEntry(entry);
     setVerifyStatus("verifying");
     setVerifyResult(null);
 
-    // Recompute from the on-chain timestamp
     const recomputed = computePlumBlossom({ date: new Date(entry.computationTimestamp * 1000) });
     const reCosmCanonical = canonicalCosmology(recomputed.cosmology);
-    const reReasCanonical = canonicalReasoning(recomputed.reasoning);
     const reCosmHash = hashCosmology(recomputed.cosmology);
-    const reReasHash = hashReasoning(recomputed.reasoning);
-
     const cosmMatch = reCosmHash === entry.cosmologyHash;
-    const reasMatch = reReasHash === entry.reasoningHash;
+
+    // Try default (no toggles) first
+    let reReasCanonical = canonicalReasoning(recomputed.reasoning);
+    let reReasHash = hashReasoning(recomputed.reasoning);
+    let reasMatch = reReasHash === entry.reasoningHash;
+    let matchedToggles: Record<string, AgreementState> | undefined;
+
+    // If reasoning doesn't match, cycle through all toggle combinations
+    if (!reasMatch) {
+      const states: AgreementState[] = ["neutral", "accepted", "rejected"];
+      const branchIds = recomputed.reasoning.branches.map(b => b.id);
+
+      for (const s0 of states) {
+        for (const s1 of states) {
+          const toggles: Record<string, AgreementState> = {
+            [branchIds[0]]: s0,
+            [branchIds[1]]: s1,
+          };
+          // Skip all-neutral (already tried above)
+          if (s0 === "neutral" && s1 === "neutral") continue;
+
+          const toggled = recomputeWithToggles(recomputed.cosmology, toggles);
+          const hash = hashReasoning(toggled);
+          if (hash === entry.reasoningHash) {
+            reasMatch = true;
+            reReasCanonical = canonicalReasoning(toggled);
+            reReasHash = hash;
+            matchedToggles = toggles;
+            break;
+          }
+        }
+        if (reasMatch) break;
+      }
+    }
 
     setVerifyResult({
       cosmMatch,
@@ -176,6 +209,7 @@ export default function VerifyView({ result }: Props) {
       recomputedReasHash: reReasHash,
       recomputedCosmCanonical: reCosmCanonical,
       recomputedReasCanonical: reReasCanonical,
+      matchedToggles,
     });
     setVerifyStatus(cosmMatch && reasMatch ? "match" : "mismatch");
   }, []);
@@ -304,6 +338,51 @@ export default function VerifyView({ result }: Props) {
                     </div>
                   </div>
                 </div>
+
+                {/* Toggle combinations tried */}
+                {(() => {
+                  const states: AgreementState[] = ["neutral", "accepted", "rejected"];
+                  const branchIds = ["cosmology", "astronomical"];
+                  const matchedKey = verifyResult.matchedToggles
+                    ? `${verifyResult.matchedToggles[branchIds[0]]}-${verifyResult.matchedToggles[branchIds[1]]}`
+                    : (verifyResult.reasMatch ? "neutral-neutral" : null);
+
+                  return (
+                    <div className="mt-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl text-gray-500 uppercase">Toggle Combinations</span>
+                        <PanelHelp text="Users can accept or reject each reasoning branch before committing. This changes the synthesis hash. All 9 combinations are checked to find which toggle state produced the on-chain hash." />
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 text-xl">
+                        {states.map(s0 =>
+                          states.map(s1 => {
+                            const key = `${s0}-${s1}`;
+                            const isMatch = key === matchedKey;
+                            return (
+                              <div
+                                key={key}
+                                className={`px-3 py-2 rounded-sm border ${
+                                  isMatch
+                                    ? "border-[#44ff88] bg-[#44ff88]/10 text-[#44ff88]"
+                                    : "border-[#1e1e1e] bg-[#0a0a0a] text-gray-600"
+                                }`}
+                              >
+                                <span className="text-gray-500">cosm:</span>{s0}{" "}
+                                <span className="text-gray-500">astro:</span>{s1}
+                                {isMatch && " \u2713"}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                      {!matchedKey && (
+                        <div className="mt-2 text-xl text-red-400">
+                          No toggle combination matched the on-chain reasoning hash
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Recomputed pre-images */}
                 <div className="mt-4 pt-4 border-t border-[#2a2a2a]">
