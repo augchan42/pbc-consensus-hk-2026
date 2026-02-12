@@ -8,6 +8,8 @@ Built for EasyA x Consensus Hong Kong 2026.
 
 **Smart Contract (Sepolia, verified):** [`0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77`](https://sepolia.etherscan.io/address/0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77#code)
 
+**Submission post:** https://x.com/aug_digitalrain/status/2021638340521660540
+
 ## Screenshots
 
 ![Hexagrams, Four Pillars, and Macro Cycle panels](public/screenshots/pbc1.png)
