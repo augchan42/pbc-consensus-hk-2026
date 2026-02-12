@@ -3,6 +3,19 @@
     "title": "梅花電腦",
     "subtitle": "Plum Blossom Computer - 宇宙計算終端",
     "description": "千年梅花易數結合即時天文數據與區塊鏈。獲取行動/觀望/迴避信號，鏈上可驗證。",
-    "loading": "正在計算宇宙層..."
+    "loading": "正在計算宇宙層...",
+    "tabReading": "解讀",
+    "tabDashboard": "儀表板",
+    "verdictTitle": "判斷",
+    "hexagramReadingTitle": "卦象",
+    "celestialContextTitle": "天象背景",
+    "reasoningTitle": "推理",
+    "onChainTitle": "鏈上承諾",
+    "expandSection": "展開",
+    "collapseSection": "收起",
+    "yearBackdrop": "年卦背景",
+    "movingLineLabel": "動爻",
+    "retrogradeNote": "逆行——能量內轉",
+    "allForward": "所有行星順行——動能暢通"
   }
 }

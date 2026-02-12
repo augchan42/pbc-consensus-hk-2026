@@ -3,6 +3,19 @@
     "title": "Plum Blossom Computer",
     "subtitle": "梅花電腦 - Cosmological Computation Terminal",
     "description": "1,000 years of Chinese divination meets real-time astronomy and blockchain. Get act/observe/avoid signals from the I Ching, verified on-chain.",
-    "loading": "Computing cosmological layers..."
+    "loading": "Computing cosmological layers...",
+    "tabReading": "Reading",
+    "tabDashboard": "Dashboard",
+    "verdictTitle": "The Verdict",
+    "hexagramReadingTitle": "The Hexagram",
+    "celestialContextTitle": "Celestial Context",
+    "reasoningTitle": "Reasoning",
+    "onChainTitle": "On-Chain Commitment",
+    "expandSection": "Expand",
+    "collapseSection": "Collapse",
+    "yearBackdrop": "Annual backdrop",
+    "movingLineLabel": "Moving Line",
+    "retrogradeNote": "retrograde — energy turned inward",
+    "allForward": "All planets moving forward — clear momentum"
   }
 }

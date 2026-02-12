@@ -4,6 +4,27 @@ A Next.js app that synthesizes 1,000 years of Chinese cosmological mathematics w
 
 Built for EasyA x Consensus Hong Kong 2026.
 
+**Demo:** https://youtu.be/iG5sE9tKiyo
+
+**Smart Contract (Sepolia, verified):** [`0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77`](https://sepolia.etherscan.io/address/0x86c3783e211b7FCfB93aEd47F0e030BFb4c85F77#code)
+
+## Screenshots
+
+![Hexagrams, Four Pillars, and Macro Cycle panels](public/screenshots/pbc1.png)
+*Hexagram computation with interlinear gloss, Four Pillars stem-branch display, and Macro Cycle timeline*
+
+![Planetary positions, Operational Scale, and Cosmic Commitment Registry](public/screenshots/pbc2.png)
+*Real-time planetary positions, operational scale derivation, and on-chain commitment registry (Sepolia)*
+
+![Commitment history and Chinese Cosmology reasoning branch](public/screenshots/pbc3.png)
+*On-chain commitment history and expanded Chinese Cosmology reasoning branch with observations*
+
+![Reasoning synthesis with both branches](public/screenshots/pbc4.png)
+*Reasoning synthesis — Chinese Cosmology and Astronomical branches producing an overall bias signal*
+
+![Interactive branch rejection](public/screenshots/pbc5.png)
+*Users can reject reasoning branches — synthesis recomputes in real time without recalculating cosmology*
+
 ## What It Does
 
 The Plum Blossom Computer runs a deterministic computation pipeline:
