@@ -234,6 +234,9 @@ export default function ReadingView({ result, toggles, onToggle }: Props) {
         </div>
       </div>
 
+      {/* ============ ON-CHAIN COMMITMENT ============ */}
+      <OraclePanel result={result} />
+
       {/* ============ SECTION 2: THE HEXAGRAM READING ============ */}
       <Section
         title={t("hexagramReadingTitle")}
@@ -452,16 +455,6 @@ export default function ReadingView({ result, toggles, onToggle }: Props) {
         />
       </Section>
 
-      {/* ============ SECTION 5: ON-CHAIN ============ */}
-      <Section
-        title={t("onChainTitle")}
-        helpText={"Cryptographic anchoring for the Plum Blossom Computer. "
-          + "Commits a tamper-evident hash of the deterministic cosmology computation and reasoning synthesis to the blockchain. "
-          + "Anyone can recompute with the same timestamp and verify the hashes match. "
-          + "Ancient oracles relied on ritual to prevent revision — this one relies on cryptography."}
-      >
-        <OraclePanel result={result} />
-      </Section>
     </div>
   );
 }
