@@ -17,8 +17,9 @@ import type { CosmologyResult, ReasoningGraph, ScenarioBias } from "@/lib/plumBl
  * Hash the deterministic cosmology result.
  * Serializes the key fields into a canonical JSON string, then keccak256.
  */
-export function hashCosmology(cosmology: CosmologyResult): string {
-  const canonical = JSON.stringify({
+/** Build the canonical JSON string for cosmology (the hash pre-image). */
+export function canonicalCosmology(cosmology: CosmologyResult): string {
+  return JSON.stringify({
     hexagramNumber: cosmology.hexagram.timeBased.hexagramNumber,
     movingLine: cosmology.hexagram.timeBased.movingLine,
     upperTrigram: cosmology.hexagram.timeBased.upperTrigram.name,
@@ -40,14 +41,18 @@ export function hashCosmology(cosmology: CosmologyResult): string {
     operationalScale: cosmology.operationalScale.scale,
     observationLevel: cosmology.operationalScale.observationLevel,
   });
-  return keccak256(toUtf8Bytes(canonical));
+}
+
+export function hashCosmology(cosmology: CosmologyResult): string {
+  return keccak256(toUtf8Bytes(canonicalCosmology(cosmology)));
 }
 
 /**
  * Hash the reasoning synthesis.
  */
-export function hashReasoning(reasoning: ReasoningGraph): string {
-  const canonical = JSON.stringify({
+/** Build the canonical JSON string for reasoning (the hash pre-image). */
+export function canonicalReasoning(reasoning: ReasoningGraph): string {
+  return JSON.stringify({
     overallBias: reasoning.synthesis.overallBias,
     confidence: reasoning.synthesis.confidence,
     branches: reasoning.branches.map(b => ({
@@ -56,7 +61,10 @@ export function hashReasoning(reasoning: ReasoningGraph): string {
       confidence: b.interpretation.confidence,
     })),
   });
-  return keccak256(toUtf8Bytes(canonical));
+}
+
+export function hashReasoning(reasoning: ReasoningGraph): string {
+  return keccak256(toUtf8Bytes(canonicalReasoning(reasoning)));
 }
 
 /** Map ScenarioBias to contract uint8 */

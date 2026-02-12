@@ -13,8 +13,9 @@ import OperationalScalePanel from "./components/OperationalScalePanel";
 import ReasoningTreePanel from "./components/ReasoningTreePanel";
 import OraclePanel from "./components/OraclePanel";
 import ReadingView from "./components/ReadingView";
+import VerifyView from "./components/VerifyView";
 
-type ActiveTab = "reading" | "dashboard";
+type ActiveTab = "reading" | "dashboard" | "verify";
 
 interface PlumBlossomClientProps {
   initialResult: PlumBlossomComputerResult;
@@ -65,13 +66,23 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
               </button>
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className={`px-3 py-1.5 transition-colors ${
+                className={`px-3 py-1.5 transition-colors border-r border-[#2a2a2a] ${
                   activeTab === "dashboard"
                     ? "bg-[#44ff88]/10 text-[#44ff88]"
                     : "text-gray-500 hover:text-gray-300"
                 }`}
               >
                 {t("tabDashboard")}
+              </button>
+              <button
+                onClick={() => setActiveTab("verify")}
+                className={`px-3 py-1.5 transition-colors ${
+                  activeTab === "verify"
+                    ? "bg-[#44ff88]/10 text-[#44ff88]"
+                    : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                {t("tabVerify")}
               </button>
             </div>
 
@@ -88,6 +99,11 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
         {/* Reading View */}
         {activeTab === "reading" && (
           <ReadingView result={result} toggles={toggles} onToggle={handleToggle} />
+        )}
+
+        {/* Verify View */}
+        {activeTab === "verify" && (
+          <VerifyView result={result} />
         )}
 
         {/* Dashboard View (original) */}
