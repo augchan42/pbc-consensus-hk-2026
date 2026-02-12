@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { PlumBlossomComputerResult } from "@/lib/plumBlossomComputer/core/types";
-import { hashCosmology, hashReasoning, biasToUint8, uint8ToBiasLabel } from "@/lib/oracleHash";
+import { biasToUint8, uint8ToBiasLabel } from "@/lib/oracleHash";
 import { connectWallet, switchChain, getRegistryContract, getEthProvider, CHAIN_CONFIG } from "@/lib/wallet";
 import PanelHelp from "./PanelHelp";
+import type { OracleHashes } from "../PlumBlossomClient";
 
 interface Props {
   result: PlumBlossomComputerResult;
+  hashes: OracleHashes;
 }
 
 interface OnChainState {
@@ -34,7 +36,7 @@ const BIAS_COLORS: Record<string, string> = {
 
 const explorer = CHAIN_CONFIG.blockExplorerUrls[0];
 
-export default function OraclePanel({ result }: Props) {
+export default function OraclePanel({ result, hashes }: Props) {
   const [address, setAddress] = useState<string | null>(null);
   const [onChain, setOnChain] = useState<OnChainState | null>(null);
   const [history, setHistory] = useState<OnChainState[]>([]);
@@ -127,8 +129,7 @@ export default function OraclePanel({ result }: Props) {
       const { signer } = await connectWallet();
       const contract = getRegistryContract(signer);
 
-      const cosmologyHash = hashCosmology(result.cosmology);
-      const reasoningHash = hashReasoning(result.reasoning);
+      const { cosmologyHash, reasoningHash } = hashes;
       const bias = biasToUint8(result.reasoning.synthesis.overallBias);
       const confidence = Math.round(result.reasoning.synthesis.confidence * 100);
       const hexagramNumber = result.cosmology.hexagram.timeBased.hexagramNumber;
@@ -182,11 +183,11 @@ export default function OraclePanel({ result }: Props) {
             </div>
             <div className="text-gray-500 text-xs space-y-0.5">
               <div>Hexagram #{result.cosmology.hexagram.timeBased.hexagramNumber} / Line {result.cosmology.hexagram.timeBased.movingLine}</div>
-              <div className="truncate text-gray-600" title={hashCosmology(result.cosmology)}>
-                cosm: {hashCosmology(result.cosmology).slice(0, 18)}...
+              <div className="truncate text-gray-600" title={hashes.cosmologyHash}>
+                cosm: {hashes.cosmologyHash.slice(0, 18)}...
               </div>
-              <div className="truncate text-gray-600" title={hashReasoning(result.reasoning)}>
-                reas: {hashReasoning(result.reasoning).slice(0, 18)}...
+              <div className="truncate text-gray-600" title={hashes.reasoningHash}>
+                reas: {hashes.reasoningHash.slice(0, 18)}...
               </div>
             </div>
           </div>

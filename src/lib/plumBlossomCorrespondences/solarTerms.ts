@@ -53,8 +53,8 @@ export function getCurrentSolarTerm(date: Date = new Date()): {
   current: SolarTerm;
   next: SolarTerm;
 } {
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
   const dateNum = month * 100 + day;
 
   let currentIndex = 0;

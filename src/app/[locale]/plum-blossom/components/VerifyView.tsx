@@ -14,9 +14,11 @@ import {
 } from "@/lib/oracleHash";
 import { getEthProvider, getRegistryContract, CHAIN_CONFIG } from "@/lib/wallet";
 import PanelHelp from "./PanelHelp";
+import type { OracleHashes } from "../PlumBlossomClient";
 
 interface Props {
   result: PlumBlossomComputerResult;
+  hashes: OracleHashes;
 }
 
 interface OnChainEntry {
@@ -84,7 +86,7 @@ const BIAS_COLORS: Record<string, string> = {
   NEUTRAL: "text-gray-400",
 };
 
-export default function VerifyView({ result }: Props) {
+export default function VerifyView({ result, hashes }: Props) {
   const [history, setHistory] = useState<OnChainEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<OnChainEntry | null>(null);
   const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>("idle");
@@ -96,7 +98,6 @@ export default function VerifyView({ result }: Props) {
     recomputedCosmCanonical: string;
     recomputedReasCanonical: string;
     matchedToggles?: Record<string, AgreementState>;
-    matchedMs?: number;
   } | null>(null);
 
   const registryAddress = process.env.NEXT_PUBLIC_REGISTRY_ADDRESS;
@@ -143,8 +144,8 @@ export default function VerifyView({ result }: Props) {
   // Current computation data
   const cosmCanonical = canonicalCosmology(result.cosmology);
   const reasCanonical = canonicalReasoning(result.reasoning);
-  const cosmHash = hashCosmology(result.cosmology);
-  const reasHash = hashReasoning(result.reasoning);
+  const cosmHash = hashes.cosmologyHash;
+  const reasHash = hashes.reasoningHash;
   const timestamp = result.timestamp;
   const unixTimestamp = Math.floor(new Date(timestamp).getTime() / 1000);
   const biasUint8Val = biasToUint8(result.reasoning.synthesis.overallBias);
@@ -156,16 +157,17 @@ export default function VerifyView({ result }: Props) {
   const cosmPretty = JSON.stringify(JSON.parse(cosmCanonical), null, 2);
   const reasPretty = JSON.stringify(JSON.parse(reasCanonical), null, 2);
 
-  // Try a single recomputation at a given Date against the on-chain entry.
-  // Returns a match result or null if neither cosm nor reas match.
-  const tryVerifyAt = useCallback((date: Date, entry: OnChainEntry) => {
+  // Verify against an on-chain entry by recomputing from its timestamp.
+  // The computation truncates to whole seconds, so ms=0 is always correct.
+  const handleVerify = useCallback(async (entry: OnChainEntry) => {
+    setSelectedEntry(entry);
+    setVerifyStatus("verifying");
+    setVerifyResult(null);
+
+    const date = new Date(entry.computationTimestamp * 1000);
     const recomputed = computePlumBlossom({ date });
     const reCosmHash = hashCosmology(recomputed.cosmology);
     const cosmMatch = reCosmHash === entry.cosmologyHash;
-
-    // If cosmology doesn't match, this timestamp is wrong — skip toggles
-    if (!cosmMatch) return null;
-
     const reCosmCanonical = canonicalCosmology(recomputed.cosmology);
 
     // Try default (no toggles) first
@@ -200,7 +202,7 @@ export default function VerifyView({ result }: Props) {
       }
     }
 
-    return {
+    setVerifyResult({
       cosmMatch,
       reasMatch,
       recomputedCosmHash: reCosmHash,
@@ -208,49 +210,9 @@ export default function VerifyView({ result }: Props) {
       recomputedCosmCanonical: reCosmCanonical,
       recomputedReasCanonical: reReasCanonical,
       matchedToggles,
-      matchedMs: date.getTime() % 1000,
-    };
+    });
+    setVerifyStatus(cosmMatch && reasMatch ? "match" : "mismatch");
   }, []);
-
-  // Verify against an on-chain entry by recomputing from its timestamp.
-  // The on-chain timestamp is in seconds, but the original computation may
-  // have used a Date with millisecond precision. We try ms=0 first, then
-  // brute-force all 1000 millisecond offsets if needed.
-  const handleVerify = useCallback(async (entry: OnChainEntry) => {
-    setSelectedEntry(entry);
-    setVerifyStatus("verifying");
-    setVerifyResult(null);
-
-    const baseMs = entry.computationTimestamp * 1000;
-
-    // Try ms=0 first (the truncated second)
-    let match = tryVerifyAt(new Date(baseMs), entry);
-
-    // If cosmology didn't match, brute-force millisecond offsets
-    if (!match) {
-      for (let ms = 1; ms < 1000; ms++) {
-        match = tryVerifyAt(new Date(baseMs + ms), entry);
-        if (match) break;
-      }
-    }
-
-    if (match) {
-      setVerifyResult(match);
-      setVerifyStatus(match.cosmMatch && match.reasMatch ? "match" : "mismatch");
-    } else {
-      // No millisecond offset produced a cosmology match
-      const fallback = computePlumBlossom({ date: new Date(baseMs) });
-      setVerifyResult({
-        cosmMatch: false,
-        reasMatch: false,
-        recomputedCosmHash: hashCosmology(fallback.cosmology),
-        recomputedReasHash: hashReasoning(fallback.reasoning),
-        recomputedCosmCanonical: canonicalCosmology(fallback.cosmology),
-        recomputedReasCanonical: canonicalReasoning(fallback.reasoning),
-      });
-      setVerifyStatus("mismatch");
-    }
-  }, [tryVerifyAt]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 font-mono">
@@ -353,13 +315,8 @@ export default function VerifyView({ result }: Props) {
                 <div>
                   <span className="text-gray-600">Recomputed from: </span>
                   <span className="text-gray-400">
-                    {new Date(selectedEntry.computationTimestamp * 1000 + (verifyResult.matchedMs ?? 0)).toISOString()}
+                    {new Date(selectedEntry.computationTimestamp * 1000).toISOString()}
                   </span>
-                  {verifyResult.matchedMs !== undefined && verifyResult.matchedMs > 0 && (
-                    <span className="text-amber-400 ml-2">
-                      (+{verifyResult.matchedMs}ms offset recovered)
-                    </span>
-                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SITE_URL, SITE_NAME } from "@/constants/site";
 import { computePlumBlossom } from "@/lib/plumBlossomComputer";
+import { hashCosmology, hashReasoning } from "@/lib/oracleHash";
 import { routing } from "@/i18n/routing";
 import PlumBlossomClient from "./PlumBlossomClient";
 
@@ -55,6 +56,10 @@ export default async function PlumBlossomPage({ params }: PlumBlossomPageProps) 
 
   const initialResult = computePlumBlossom({ date: new Date() });
   const serializedResult = JSON.parse(JSON.stringify(initialResult));
+  const initialHashes = {
+    cosmologyHash: hashCosmology(initialResult.cosmology),
+    reasoningHash: hashReasoning(initialResult.reasoning),
+  };
 
-  return <PlumBlossomClient initialResult={serializedResult} />;
+  return <PlumBlossomClient initialResult={serializedResult} initialHashes={initialHashes} />;
 }

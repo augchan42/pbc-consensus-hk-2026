@@ -20,12 +20,12 @@ import type { FourPillars, PlumBlossomComputerResult, CosmologyResult } from "..
  */
 function calculateFourPillars(date: Date): FourPillars {
   const solar = Solar.fromYmdHms(
-    date.getFullYear(),
-    date.getMonth() + 1,
-    date.getDate(),
-    date.getHours(),
-    date.getMinutes(),
-    date.getSeconds()
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds()
   );
   const lunar = solar.getLunar();
 
@@ -75,13 +75,13 @@ export function computePlumBlossom(input: { date: Date }): PlumBlossomComputerRe
 
   // Layer 1: Hexagrams (existing)
   const timeBased = calculatePlumBlossom({ gregorianDate: date });
-  const yearBased = getShaoYongYearHexagram(date.getFullYear());
+  const yearBased = getShaoYongYearHexagram(date.getUTCFullYear());
 
   // Layer 2: Four Pillars
   const fourPillars = calculateFourPillars(date);
 
   // Layer 3: Macro Cycles (existing)
-  const macroCycle = getMacroCycleContext(date.getFullYear());
+  const macroCycle = getMacroCycleContext(date.getUTCFullYear());
 
   // Layer 4: Astronomy (new)
   const planetaryPositions = calculatePlanetaryPositions(date);

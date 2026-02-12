@@ -12,11 +12,13 @@ import { InterlinearGloss } from "@/components/InterlinearGloss";
 import ReasoningTreePanel from "./ReasoningTreePanel";
 import OraclePanel from "./OraclePanel";
 import PanelHelp from "./PanelHelp";
+import type { OracleHashes } from "../PlumBlossomClient";
 
 interface Props {
   result: PlumBlossomComputerResult;
   toggles: Record<string, AgreementState>;
   onToggle: (branchId: string, state: AgreementState) => void;
+  hashes: OracleHashes;
 }
 
 const BIAS_DISPLAY: Record<string, { word: string; color: string; description: string }> = {
@@ -133,7 +135,7 @@ function Section({
   );
 }
 
-export default function ReadingView({ result, toggles, onToggle }: Props) {
+export default function ReadingView({ result, toggles, onToggle, hashes }: Props) {
   const t = useTranslations("PlumBlossom");
   const { cosmology, reasoning } = result;
   const ts = new Date(result.timestamp);
@@ -235,7 +237,7 @@ export default function ReadingView({ result, toggles, onToggle }: Props) {
       </div>
 
       {/* ============ ON-CHAIN COMMITMENT ============ */}
-      <OraclePanel result={result} />
+      <OraclePanel result={result} hashes={hashes} />
 
       {/* ============ SECTION 2: THE HEXAGRAM READING ============ */}
       <Section

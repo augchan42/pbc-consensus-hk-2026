@@ -381,25 +381,25 @@ export function calculatePlumBlossom(input: PlumBlossomInput): PlumBlossomResult
 
   // Get lunar calendar values
   const lunar = gregorianToLunar(
-    gregorianDate.getFullYear(),
-    gregorianDate.getMonth() + 1, // JS months are 0-indexed
-    gregorianDate.getDate()
+    gregorianDate.getUTCFullYear(),
+    gregorianDate.getUTCMonth() + 1, // JS months are 0-indexed
+    gregorianDate.getUTCDate()
   );
 
   // Get sexagenary cycle information (60-year cycle)
   const sexagenaryCycle = getSexagenaryCycleInfo(
-    gregorianDate.getFullYear(),
-    gregorianDate.getMonth() + 1,
-    gregorianDate.getDate()
+    gregorianDate.getUTCFullYear(),
+    gregorianDate.getUTCMonth() + 1,
+    gregorianDate.getUTCDate()
   );
 
   // Get year branch index (1-12) from lunar year's earthly branch
   // NOTE: This is kept for reference but NOT used in calculations
   // The sexagenary position (1-60) is used instead for accurate Plum Blossom divination
   const yearNumber = getLunarYearBranchIndex(
-    gregorianDate.getFullYear(),
-    gregorianDate.getMonth() + 1,
-    gregorianDate.getDate()
+    gregorianDate.getUTCFullYear(),
+    gregorianDate.getUTCMonth() + 1,
+    gregorianDate.getUTCDate()
   );
 
   // Get lunar month and day
@@ -407,7 +407,7 @@ export function calculatePlumBlossom(input: PlumBlossomInput): PlumBlossomResult
   const dayNumber = lunar.day;
 
   // Get 時辰 index
-  const hour = gregorianDate.getHours();
+  const hour = gregorianDate.getUTCHours();
   const hourNumber = getShichenIndex(hour);
   const shichen = getShichen(hour);
 
@@ -604,26 +604,26 @@ export function calculateContextualPlumBlossom(input: ContextualPlumBlossomInput
 
   // === LOWER TRIGRAM (Query Time - Always Modern) ===
   const lowerLunar = gregorianToLunar(
-    lowerDate.getFullYear(),
-    lowerDate.getMonth() + 1,
-    lowerDate.getDate()
+    lowerDate.getUTCFullYear(),
+    lowerDate.getUTCMonth() + 1,
+    lowerDate.getUTCDate()
   );
 
   const lowerYearNumber = getLunarYearBranchIndex(
-    lowerDate.getFullYear(),
-    lowerDate.getMonth() + 1,
-    lowerDate.getDate()
+    lowerDate.getUTCFullYear(),
+    lowerDate.getUTCMonth() + 1,
+    lowerDate.getUTCDate()
   );
 
   const lowerSexagenary = getSexagenaryCycleInfo(
-    lowerDate.getFullYear(),
-    lowerDate.getMonth() + 1,
-    lowerDate.getDate()
+    lowerDate.getUTCFullYear(),
+    lowerDate.getUTCMonth() + 1,
+    lowerDate.getUTCDate()
   );
 
   const lowerMonthNumber = Math.abs(lowerLunar.month);
   const lowerDayNumber = lowerLunar.day;
-  const lowerHour = lowerDate.getHours();
+  const lowerHour = lowerDate.getUTCHours();
   const lowerHourNumber = getShichenIndex(lowerHour);
   const lowerShichen = getShichen(lowerHour);
 

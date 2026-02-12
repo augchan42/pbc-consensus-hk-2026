@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { recomputeWithToggles } from "@/lib/plumBlossomComputer/reasoning/graphBuilder";
+import { hashReasoning } from "@/lib/oracleHash";
 import type { PlumBlossomComputerResult, AgreementState } from "@/lib/plumBlossomComputer/core/types";
 import HexagramCorePanel from "./components/HexagramCorePanel";
 import StemsBranchesPanel from "./components/StemsBranchesPanel";
@@ -17,13 +18,20 @@ import VerifyView from "./components/VerifyView";
 
 type ActiveTab = "reading" | "dashboard" | "verify";
 
-interface PlumBlossomClientProps {
-  initialResult: PlumBlossomComputerResult;
+export interface OracleHashes {
+  cosmologyHash: string;
+  reasoningHash: string;
 }
 
-export default function PlumBlossomClient({ initialResult }: PlumBlossomClientProps) {
+interface PlumBlossomClientProps {
+  initialResult: PlumBlossomComputerResult;
+  initialHashes: OracleHashes;
+}
+
+export default function PlumBlossomClient({ initialResult, initialHashes }: PlumBlossomClientProps) {
   const t = useTranslations("PlumBlossom");
   const [result, setResult] = useState<PlumBlossomComputerResult>(initialResult);
+  const [hashes, setHashes] = useState<OracleHashes>(initialHashes);
   const [toggles, setToggles] = useState<Record<string, AgreementState>>({});
   const [activeTab, setActiveTab] = useState<ActiveTab>("reading");
 
@@ -33,6 +41,7 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
       setToggles(newToggles);
       const updatedReasoning = recomputeWithToggles(result.cosmology, newToggles);
       setResult(prev => ({ ...prev, reasoning: updatedReasoning }));
+      setHashes(prev => ({ ...prev, reasoningHash: hashReasoning(updatedReasoning) }));
     },
     [result, toggles]
   );
@@ -98,12 +107,12 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
 
         {/* Reading View */}
         {activeTab === "reading" && (
-          <ReadingView result={result} toggles={toggles} onToggle={handleToggle} />
+          <ReadingView result={result} toggles={toggles} onToggle={handleToggle} hashes={hashes} />
         )}
 
         {/* Verify View */}
         {activeTab === "verify" && (
-          <VerifyView result={result} />
+          <VerifyView result={result} hashes={hashes} />
         )}
 
         {/* Dashboard View (original) */}
@@ -119,7 +128,7 @@ export default function PlumBlossomClient({ initialResult }: PlumBlossomClientPr
                 moonPhase={result.cosmology.moonPhase}
               />
               <OperationalScalePanel scale={result.cosmology.operationalScale} />
-              <OraclePanel result={result} />
+              <OraclePanel result={result} hashes={hashes} />
             </div>
 
             {/* Reasoning Tree — full width */}
