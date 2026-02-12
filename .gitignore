@@ -48,3 +48,4 @@ next-env.d.ts
 /typechain-types
 .claude
 
+.claude/settings.local.json
